@@ -7,23 +7,43 @@ const authRoutes = require('./routes/auth');
 const candidatesRoutes = require('./routes/candidates');
 
 const app = express();
-app.use(cors());
-app.use(express.json()); // parse json bodies
-app.use(express.urlencoded({ extended: true }));
-app.use(`/${process.env.UPLOAD_DIR || 'uploads'}`, express.static(process.env.UPLOAD_DIR || 'uploads'));
 
+// ---- CORS CONFIG (IMPORTANT FOR VERCEL FRONTEND) ----
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: false
+}));
+
+// ---- MIDDLEWARE ----
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ---- STATIC FILES (uploads) ----
+const uploadsDir = process.env.UPLOAD_DIR || 'uploads';
+app.use(`/${uploadsDir}`, express.static(uploadsDir));
+
+// ---- CONNECT TO MONGO ----
 connectDB(process.env.MONGO_URI);
 
+// ---- ROUTES ----
 app.use('/api/auth', authRoutes);
 app.use('/api/candidates', candidatesRoutes);
 
-// basic error handler for multer file type rejections
-app.use(function(err, req, res, next) {
-  if (err instanceof Error && err.message.includes('Only .pdf')) {
+// ---- MULTER ERROR HANDLER ----
+app.use((err, req, res, next) => {
+  if (err?.message?.includes('Only .pdf')) {
     return res.status(400).json({ error: err.message });
   }
-  next(err);
+  console.error("ERROR:", err);
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// ---- PORT LISTENER (REQUIRED FOR RENDER) ----
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
+// module.exports = app;
