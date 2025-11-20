@@ -69,7 +69,7 @@ export default function CandidateCard({ candidate, onUpdated, onDeleted }) {
       {/* Resume */}
       {candidate.resumeUrl && (
         <a
-          href={`${import.meta.env.BACKEND_URI}/${candidate.resumeUrl}`}
+          href={`${import.meta.env.BACKEND_URI || 'https://candidate-referral-mern.onrender.com'}/${candidate.resumeUrl}`}
           target="_blank"
           rel="noreferrer"
           className="block mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
